@@ -192,7 +192,7 @@ routes.get("/group/get-admins/:id", async (req, res) => {
  * @swagger
  * /message/get-count-messages/{id}/{limit}:
  *   get:
- *     summary: Obtém os participantes de um grupo
+ *     summary: Obtém uma quantidade de mensagens de um chat
  *     tags: [Message]
  *     parameters:
  *       - in: path
@@ -209,7 +209,7 @@ routes.get("/group/get-admins/:id", async (req, res) => {
  *           type: number
  *     responses:
  *       200:
- *         description: Retorna uma lista de participantes
+ *         description: Retorna a quantidade determinada de mensagens
  */
 routes.get("/message/get-count-messages/:id/:limit", async (req, res) => {
   try {
