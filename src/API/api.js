@@ -24,7 +24,7 @@ const {
  * /connect-session:
  *   get:
  *     summary: Inicia uma sessão de WhatsApp
- *     tags: [Session]
+ *     tags: [Client]
  *     responses:
  *       200:
  *         description: Retorna uma mensagem informando sobre o status da conexão e o qr code para realizar a conexão
@@ -124,7 +124,8 @@ routes.get("/group/get-all-participants/:id", async (req, res) => {
   if (!participants) {
     res.send(JSON.stringify({ message: "Chat not Found" }));
   }
-  res.send(JSON.stringify({ participants }));
+  const count = participants.length;
+  res.send(JSON.stringify({ participants, count }));
 });
 
 /**
