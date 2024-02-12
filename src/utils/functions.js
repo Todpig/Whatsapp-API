@@ -1,15 +1,24 @@
 const { Client, LocalAuth } = require("whatsapp-web.js");
 const qrcode = require("qrcode-terminal");
-const sessions = {};
-let userGroups;
 const { EXECUTABLE, HEADLEES_BROWSER, SESSION_NAME } = require("./config");
+const fs = require("fs");
+
+/**
+ * @typedef {Object.<string, Client>} Sessions
+ */
+
+/**@type {WAWebJS.Chat[]} */
+let userGroups;
+
+/** @type {Sessions} */
+const sessions = {};
 
 /**
  * @param {string} chatId
  * */
 async function getLastMessageByChatId(chatId) {
-  const groups = await sessions[SESSION_NAME].getChats();
-  const chat = groups.find((chat) => chat.id._serialized === chatId);
+  /**@type {WAWebJS.Chat[]} */
+  const chat = userGroups.find((chat) => chat.id._serialized === chatId);
   if (!chat) {
     return false;
   }
@@ -33,8 +42,8 @@ async function forwardMessage(chatId, message) {
  * @param {string} chatId
  * */
 async function getParticipantsByChatId(chatId) {
-  const groups = await sessions[SESSION_NAME].getChats();
-  const chat = groups.find((chat) => chat.id._serialized === chatId);
+  /**@type {WAWebJS.Chat[]} */
+  const chat = userGroups.find((chat) => chat.id._serialized === chatId);
   if (!chat) return false;
   const participants = await chat.participants;
   return participants;
@@ -60,9 +69,8 @@ async function startSession() {
   client.initialize();
 
   sessions[SESSION_NAME] = client;
-
   client.on("ready", async () => {
-    userGroups = await client.getChats();
+    userGroups = await sessions[SESSION_NAME].getChats();
   });
 }
 
@@ -79,7 +87,7 @@ async function getQrCode() {
  * @param {string} chatName
  * @param {string} message */
 async function sendMessageByChatName(chatName, message) {
-  userGroups = await sessions[SESSION_NAME].getChats();
+  /**@type {WAWebJS.Chat[]} */
   const group = userGroups.find((group) => group.name === chatName);
   if (!group) {
     return false;
@@ -93,14 +101,29 @@ async function sendMessageByChatName(chatName, message) {
  * @returns
  */
 async function getCountMessagesByChatId(chatId, limitMessage = 1) {
-  const groups = await sessions[SESSION_NAME].getChats();
-  const chat = groups.find((chat) => chat.id._serialized === chatId);
+  /**@type {WAWebJS.Chat[]} */
+  const chat = userGroups.find((chat) => chat.id._serialized === chatId);
   if (!chat) {
     return false;
   }
   /**@type {import("whatsapp-web.js").Message[]} */
   const messages = await chat.fetchMessages({ limit: limitMessage });
   return messages;
+}
+
+/**@param {boolean} deleteSession */
+function closeAndDeleteSession(deleteS) {
+  const fileExists = fs.existsSync(`.wwebjs_auth/session-${SESSION_NAME}`);
+  if (!fileExists || !sessions[SESSION_NAME]) return false;
+  sessions[SESSION_NAME].destroy();
+  if (deleteS) deleteSession(`.wwebjs_auth/session-${SESSION_NAME}`);
+  return true;
+}
+
+/**@param {string} path */
+function deleteSession(path) {
+  delete sessions[SESSION_NAME];
+  fs.rmdirSync(path, { recursive: true, force: true });
 }
 
 module.exports = {
@@ -112,4 +135,5 @@ module.exports = {
   sessions,
   forwardMessage,
   getCountMessagesByChatId,
+  closeAndDeleteSession,
 };

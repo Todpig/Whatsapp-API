@@ -10,6 +10,7 @@ const {
   forwardMessage,
   getQrCode,
   getCountMessagesByChatId,
+  closeAndDeleteSession,
 } = require("../utils/functions.js");
 
 /**
@@ -223,6 +224,29 @@ routes.get("/message/get-count-messages/:id/:limit", async (req, res) => {
   } catch (error) {
     res.send(JSON.stringify({ message: "Error to get count messages" }));
   }
+});
+
+/**
+ * @swagger
+ * /close-and-delete-session/{deleteS}:
+ *   delete:
+ *     summary: Fecha e deleta a sessão do cliente whastapp conectado
+ *     tags: [Client]
+ *     parameters:
+ *       - in: path
+ *         name: deleteS
+ *         required: true
+ *         description: Booleano para deletar a sessão
+ *         schema:
+ *           type: boolean
+ */
+routes.delete("/close-and-delete-session/:deleteS", async (req, res) => {
+  /**@type {boolean} */
+  const deleteS = req.params.deleteS;
+  const status = closeAndDeleteSession(deleteS);
+  status === false
+    ? res.send(JSON.stringify({ message: "Session not found" }))
+    : res.send(JSON.stringify({ message: "successful operation" }));
 });
 
 module.exports = { routes };
