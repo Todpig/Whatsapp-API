@@ -11,6 +11,21 @@ const {
   getQrCode,
   getCountMessagesByChatId,
   closeAndDeleteSession,
+  addParticipants,
+  deleteChat,
+  archiveChat,
+  clearMessages,
+  pinChat,
+  muteChat,
+  removeParticipants,
+  revokeInvite,
+  unarchiveChat,
+  unmuteChat,
+  unpinChat,
+  promoteParticipants,
+  demoteParticipants,
+  setPictureChat,
+  getInviteCode,
 } = require("../utils/functions.js");
 
 /**
@@ -249,4 +264,385 @@ routes.delete("/close-and-delete-session/:deleteS", async (req, res) => {
     : res.send(JSON.stringify({ message: "successful operation" }));
 });
 
+/**
+ * @swagger
+ * /group/add-participants:
+ *   post:
+ *     summary: Adiciona uma lista de participantes no grupo
+ *     tags: [Group]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *               participants:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Retorna uma mensagem informando sobre o status da ação
+ */
+
+routes.post("/group/add-participants", async (req, res) => {
+  const { chatId, participants } = req.body;
+  await addParticipants(chatId, participants);
+  res.send(JSON.stringify({ message: "Adicionando participantes" }));
+});
+
+/**
+ * @swagger
+ * /group/remove-participants:
+ *   post:
+ *     summary: Remove uma lista de participantes no grupo
+ *     tags: [Group]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *               participants:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Retorna uma mensagem informando sobre o status da ação
+ */
+
+routes.post("/group/remove-participants", async (req, res) => {
+  const { chatId, participants } = req.body;
+  await removeParticipants(chatId, participants);
+  res.send(JSON.stringify({ message: "Removendo participantes" }));
+});
+
+/**
+ * @swagger
+ * /group/promote-participants:
+ *   put:
+ *     summary: Promove a admin uma lista de participantes no grupo
+ *     tags: [Group]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *               participants:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Retorna uma mensagem informando sobre o status da ação
+ */
+
+routes.put("/group/promote-participants", async (req, res) => {
+  const { chatId, participants } = req.body;
+  await promoteParticipants(chatId, participants);
+  res.send(
+    JSON.stringify({ message: "Promovendo participantes à administrador" })
+  );
+});
+
+/**
+ * @swagger
+ * /group/update-picture:
+ *   put:
+ *     summary: Atualiza a foto do grupo
+ *     tags: [Group]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *               pathMedia:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Retorna uma mensagem informando sobre o status da ação
+ */
+
+routes.put("/group/update-picture", async (req, res) => {
+  const { chatId, pathMedia } = req.body;
+  await setPictureChat(chatId, pathMedia);
+  res.send(JSON.stringify({ message: "Atualizando imagem" }));
+});
+
+/**
+ * @swagger
+ * /group/demote-participants:
+ *   put:
+ *     summary: Remove o admin de uma lista de participantes no grupo
+ *     tags: [Group]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chatId:
+ *                 type: string
+ *               participants:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Retorna uma mensagem informando sobre o status da ação
+ */
+
+routes.put("/group/demote-participants", async (req, res) => {
+  const { chatId, participants } = req.body;
+  await demoteParticipants(chatId, participants);
+  res.send(
+    JSON.stringify({
+      message: "Removendo participantes la lista de administradores",
+    })
+  );
+});
+
+/**
+ * @swagger
+ * /group/delete-chat/{id}:
+ *   delete:
+ *     summary: Apaga o chat
+ *     tags: [Group]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do grupo
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Retorna o status da ação
+ */
+routes.delete("/group/delete-chat/:id", async (req, res) => {
+  const chatId = req.params.id;
+  await deleteChat(chatId);
+  res.send(JSON.stringify({ message: "Apagando o chat" }));
+});
+
+/**
+ * @swagger
+ * /group/archive-chat/{id}:
+ *   patch:
+ *     summary: Arquiva o chat
+ *     tags: [Group]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do grupo
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Retorna o status da ação
+ */
+routes.patch("/group/archive-chat/:id", async (req, res) => {
+  const chatId = req.params.id;
+  await archiveChat(chatId);
+  res.send(JSON.stringify({ message: "Arquivando o chat" }));
+});
+
+/**
+ * @swagger
+ * /group/unarchive-chat/{id}:
+ *   patch:
+ *     summary: Desarquiva o chat
+ *     tags: [Group]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do grupo
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Retorna o status da ação
+ */
+routes.patch("/group/unarchive-chat/:id", async (req, res) => {
+  const chatId = req.params.id;
+  await unarchiveChat(chatId);
+  res.send(JSON.stringify({ message: "Desarquivando o chat" }));
+});
+
+/**
+ * @swagger
+ * /group/clear-messages/{id}:
+ *   delete:
+ *     summary: Limpa todas as conversas do chat
+ *     tags: [Group]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do grupo
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Retorna o status da ação
+ */
+routes.delete("/group/clear-messages/:id", async (req, res) => {
+  const chatId = req.params.id;
+  await clearMessages(chatId);
+  res.send(JSON.stringify({ message: "Apagando mensagens o chat" }));
+});
+
+/**
+ * @swagger
+ * /group/pin-chat/{id}:
+ *   patch:
+ *     summary: Fixa o chat
+ *     tags: [Group]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do grupo
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Retorna o status da ação
+ */
+routes.patch("/group/pin-chat/:id", async (req, res) => {
+  const chatId = req.params.id;
+  await pinChat(chatId);
+  res.send(JSON.stringify({ message: "Fixando o chat" }));
+});
+
+/**
+ * @swagger
+ * /group/unpin-chat/{id}:
+ *   patch:
+ *     summary: Desfixa o chat
+ *     tags: [Group]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do grupo
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Retorna o status da ação
+ */
+routes.patch("/group/unpin-chat/:id", async (req, res) => {
+  const chatId = req.params.id;
+  await unpinChat(chatId);
+  res.send(JSON.stringify({ message: "Fixando o chat" }));
+});
+
+/**
+ * @swagger
+ * /group/mute-chat/{id}:
+ *   patch:
+ *     summary: Silencia o chat
+ *     tags: [Group]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do grupo
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Retorna o status da ação
+ */
+routes.patch("/group/mute-chat/:id", async (req, res) => {
+  const chatId = req.params.id;
+  await muteChat(chatId);
+  res.send(JSON.stringify({ message: "Silenciando o chat" }));
+});
+
+/**
+ * @swagger
+ * /group/unmute-chat/{id}:
+ *   patch:
+ *     summary: Descilencia o chat
+ *     tags: [Group]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do grupo
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Retorna o status da ação
+ */
+routes.patch("/group/unmute-chat/:id", async (req, res) => {
+  const chatId = req.params.id;
+  await unmuteChat(chatId);
+  res.send(JSON.stringify({ message: "Descilenciando o chat" }));
+});
+
+/**
+ * @swagger
+ * /group/revoke-invite-chat/{id}:
+ *   put:
+ *     summary: Redefini o link de entrada do chat
+ *     tags: [Group]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do grupo
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Retorna o status da ação
+ */
+routes.put("/group/revoke-invite-chat/:id", async (req, res) => {
+  const chatId = req.params.id;
+  await revokeInvite(chatId, res);
+});
+
+/**
+ * @swagger
+ * /group/get-invite-code/{id}:
+ *   get:
+ *     summary: Obtém o link de entrada do chat
+ *     tags: [Group]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID do grupo
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Retorna o status da ação
+ */
+routes.get("/group/get-invite-code/:id", async (req, res) => {
+  const chatId = req.params.id;
+  await getInviteCode(chatId, res);
+});
 module.exports = { routes };
