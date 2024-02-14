@@ -26,6 +26,7 @@ const {
   demoteParticipants,
   setPictureChat,
   getInviteCode,
+  deleteLastMessage,
 } = require("../utils/functions.js");
 
 /**
@@ -113,16 +114,16 @@ routes.post("/message/forward-last-message", async (req, res) => {
   if (!message) {
     res.send(JSON.stringify({ message: "Chat not found" }));
   }
-  const result = await forwardMessage(destinationChatId);
+  const result = await forwardMessage(destinationChatId, message);
   res.send(JSON.stringify({ result, message: "Send message" }));
 });
 
 /**
  * @swagger
- * /group/get-all-participants/{id}:
+ * /chat/get-all-participants/{id}:
  *   get:
  *     summary: Obtém os participantes de um grupo
- *     tags: [Group]
+ *     tags: [Chat]
  *     parameters:
  *       - in: path
  *         name: id
@@ -134,7 +135,7 @@ routes.post("/message/forward-last-message", async (req, res) => {
  *       200:
  *         description: Retorna uma lista de participantes
  */
-routes.get("/group/get-all-participants/:id", async (req, res) => {
+routes.get("/chat/get-all-participants/:id", async (req, res) => {
   const chatId = req.params.id;
   const participants = await getParticipantsByChatId(chatId);
   if (!participants) {
@@ -179,10 +180,10 @@ routes.post("/message/send-message-by-chat-name/", async (req, res) => {
 
 /**
  * @swagger
- * /group/get-admins/{id}:
+ * /chat/get-admins/{id}:
  *   get:
  *     summary: Obtém os administradores de um grupo
- *     tags: [Group]
+ *     tags: [Chat]
  *     parameters:
  *       - in: path
  *         name: id
@@ -194,7 +195,7 @@ routes.post("/message/send-message-by-chat-name/", async (req, res) => {
  *       200:
  *         description: Retorna uma lista de participantes que são administradores
  */
-routes.get("/group/get-admins/:id", async (req, res) => {
+routes.get("/chat/get-admins/:id", async (req, res) => {
   try {
     const chatId = req.params.id;
     const participants = await getParticipantsByChatId(chatId);
@@ -266,10 +267,10 @@ routes.delete("/close-and-delete-session/:deleteS", async (req, res) => {
 
 /**
  * @swagger
- * /group/add-participants:
+ * /chat/add-participants:
  *   post:
  *     summary: Adiciona uma lista de participantes no grupo
- *     tags: [Group]
+ *     tags: [Chat]
  *     requestBody:
  *       required: true
  *       content:
@@ -288,7 +289,7 @@ routes.delete("/close-and-delete-session/:deleteS", async (req, res) => {
  *         description: Retorna uma mensagem informando sobre o status da ação
  */
 
-routes.post("/group/add-participants", async (req, res) => {
+routes.post("/chat/add-participants", async (req, res) => {
   const { chatId, participants } = req.body;
   await addParticipants(chatId, participants);
   res.send(JSON.stringify({ message: "Adicionando participantes" }));
@@ -296,10 +297,10 @@ routes.post("/group/add-participants", async (req, res) => {
 
 /**
  * @swagger
- * /group/remove-participants:
+ * /chat/remove-participants:
  *   post:
  *     summary: Remove uma lista de participantes no grupo
- *     tags: [Group]
+ *     tags: [Chat]
  *     requestBody:
  *       required: true
  *       content:
@@ -318,7 +319,7 @@ routes.post("/group/add-participants", async (req, res) => {
  *         description: Retorna uma mensagem informando sobre o status da ação
  */
 
-routes.post("/group/remove-participants", async (req, res) => {
+routes.post("/chat/remove-participants", async (req, res) => {
   const { chatId, participants } = req.body;
   await removeParticipants(chatId, participants);
   res.send(JSON.stringify({ message: "Removendo participantes" }));
@@ -326,10 +327,10 @@ routes.post("/group/remove-participants", async (req, res) => {
 
 /**
  * @swagger
- * /group/promote-participants:
+ * /chat/promote-participants:
  *   put:
  *     summary: Promove a admin uma lista de participantes no grupo
- *     tags: [Group]
+ *     tags: [Chat]
  *     requestBody:
  *       required: true
  *       content:
@@ -348,7 +349,7 @@ routes.post("/group/remove-participants", async (req, res) => {
  *         description: Retorna uma mensagem informando sobre o status da ação
  */
 
-routes.put("/group/promote-participants", async (req, res) => {
+routes.put("/chat/promote-participants", async (req, res) => {
   const { chatId, participants } = req.body;
   await promoteParticipants(chatId, participants);
   res.send(
@@ -358,10 +359,10 @@ routes.put("/group/promote-participants", async (req, res) => {
 
 /**
  * @swagger
- * /group/update-picture:
+ * /chat/update-picture:
  *   put:
  *     summary: Atualiza a foto do grupo
- *     tags: [Group]
+ *     tags: [Chat]
  *     requestBody:
  *       required: true
  *       content:
@@ -378,7 +379,7 @@ routes.put("/group/promote-participants", async (req, res) => {
  *         description: Retorna uma mensagem informando sobre o status da ação
  */
 
-routes.put("/group/update-picture", async (req, res) => {
+routes.put("/chat/update-picture", async (req, res) => {
   const { chatId, pathMedia } = req.body;
   await setPictureChat(chatId, pathMedia);
   res.send(JSON.stringify({ message: "Atualizando imagem" }));
@@ -386,10 +387,10 @@ routes.put("/group/update-picture", async (req, res) => {
 
 /**
  * @swagger
- * /group/demote-participants:
+ * /chat/demote-participants:
  *   put:
  *     summary: Remove o admin de uma lista de participantes no grupo
- *     tags: [Group]
+ *     tags: [Chat]
  *     requestBody:
  *       required: true
  *       content:
@@ -408,7 +409,7 @@ routes.put("/group/update-picture", async (req, res) => {
  *         description: Retorna uma mensagem informando sobre o status da ação
  */
 
-routes.put("/group/demote-participants", async (req, res) => {
+routes.put("/chat/demote-participants", async (req, res) => {
   const { chatId, participants } = req.body;
   await demoteParticipants(chatId, participants);
   res.send(
@@ -420,10 +421,10 @@ routes.put("/group/demote-participants", async (req, res) => {
 
 /**
  * @swagger
- * /group/delete-chat/{id}:
+ * /chat/delete-chat/{id}:
  *   delete:
  *     summary: Apaga o chat
- *     tags: [Group]
+ *     tags: [Chat]
  *     parameters:
  *       - in: path
  *         name: id
@@ -435,7 +436,7 @@ routes.put("/group/demote-participants", async (req, res) => {
  *       200:
  *         description: Retorna o status da ação
  */
-routes.delete("/group/delete-chat/:id", async (req, res) => {
+routes.delete("/chat/delete-chat/:id", async (req, res) => {
   const chatId = req.params.id;
   await deleteChat(chatId);
   res.send(JSON.stringify({ message: "Apagando o chat" }));
@@ -443,10 +444,10 @@ routes.delete("/group/delete-chat/:id", async (req, res) => {
 
 /**
  * @swagger
- * /group/archive-chat/{id}:
+ * /chat/archive-chat/{id}:
  *   patch:
  *     summary: Arquiva o chat
- *     tags: [Group]
+ *     tags: [Chat]
  *     parameters:
  *       - in: path
  *         name: id
@@ -458,7 +459,7 @@ routes.delete("/group/delete-chat/:id", async (req, res) => {
  *       200:
  *         description: Retorna o status da ação
  */
-routes.patch("/group/archive-chat/:id", async (req, res) => {
+routes.patch("/chat/archive-chat/:id", async (req, res) => {
   const chatId = req.params.id;
   await archiveChat(chatId);
   res.send(JSON.stringify({ message: "Arquivando o chat" }));
@@ -466,10 +467,10 @@ routes.patch("/group/archive-chat/:id", async (req, res) => {
 
 /**
  * @swagger
- * /group/unarchive-chat/{id}:
+ * /chat/unarchive-chat/{id}:
  *   patch:
  *     summary: Desarquiva o chat
- *     tags: [Group]
+ *     tags: [Chat]
  *     parameters:
  *       - in: path
  *         name: id
@@ -481,7 +482,7 @@ routes.patch("/group/archive-chat/:id", async (req, res) => {
  *       200:
  *         description: Retorna o status da ação
  */
-routes.patch("/group/unarchive-chat/:id", async (req, res) => {
+routes.patch("/chat/unarchive-chat/:id", async (req, res) => {
   const chatId = req.params.id;
   await unarchiveChat(chatId);
   res.send(JSON.stringify({ message: "Desarquivando o chat" }));
@@ -489,10 +490,10 @@ routes.patch("/group/unarchive-chat/:id", async (req, res) => {
 
 /**
  * @swagger
- * /group/clear-messages/{id}:
+ * /chat/clear-messages/{id}:
  *   delete:
  *     summary: Limpa todas as conversas do chat
- *     tags: [Group]
+ *     tags: [Chat]
  *     parameters:
  *       - in: path
  *         name: id
@@ -504,7 +505,7 @@ routes.patch("/group/unarchive-chat/:id", async (req, res) => {
  *       200:
  *         description: Retorna o status da ação
  */
-routes.delete("/group/clear-messages/:id", async (req, res) => {
+routes.delete("/chat/clear-messages/:id", async (req, res) => {
   const chatId = req.params.id;
   await clearMessages(chatId);
   res.send(JSON.stringify({ message: "Apagando mensagens o chat" }));
@@ -512,10 +513,10 @@ routes.delete("/group/clear-messages/:id", async (req, res) => {
 
 /**
  * @swagger
- * /group/pin-chat/{id}:
+ * /chat/pin-chat/{id}:
  *   patch:
  *     summary: Fixa o chat
- *     tags: [Group]
+ *     tags: [Chat]
  *     parameters:
  *       - in: path
  *         name: id
@@ -527,7 +528,7 @@ routes.delete("/group/clear-messages/:id", async (req, res) => {
  *       200:
  *         description: Retorna o status da ação
  */
-routes.patch("/group/pin-chat/:id", async (req, res) => {
+routes.patch("/chat/pin-chat/:id", async (req, res) => {
   const chatId = req.params.id;
   await pinChat(chatId);
   res.send(JSON.stringify({ message: "Fixando o chat" }));
@@ -535,10 +536,10 @@ routes.patch("/group/pin-chat/:id", async (req, res) => {
 
 /**
  * @swagger
- * /group/unpin-chat/{id}:
+ * /chat/unpin-chat/{id}:
  *   patch:
  *     summary: Desfixa o chat
- *     tags: [Group]
+ *     tags: [Chat]
  *     parameters:
  *       - in: path
  *         name: id
@@ -550,7 +551,7 @@ routes.patch("/group/pin-chat/:id", async (req, res) => {
  *       200:
  *         description: Retorna o status da ação
  */
-routes.patch("/group/unpin-chat/:id", async (req, res) => {
+routes.patch("/chat/unpin-chat/:id", async (req, res) => {
   const chatId = req.params.id;
   await unpinChat(chatId);
   res.send(JSON.stringify({ message: "Fixando o chat" }));
@@ -558,10 +559,10 @@ routes.patch("/group/unpin-chat/:id", async (req, res) => {
 
 /**
  * @swagger
- * /group/mute-chat/{id}:
+ * /chat/mute-chat/{id}:
  *   patch:
  *     summary: Silencia o chat
- *     tags: [Group]
+ *     tags: [Chat]
  *     parameters:
  *       - in: path
  *         name: id
@@ -573,7 +574,7 @@ routes.patch("/group/unpin-chat/:id", async (req, res) => {
  *       200:
  *         description: Retorna o status da ação
  */
-routes.patch("/group/mute-chat/:id", async (req, res) => {
+routes.patch("/chat/mute-chat/:id", async (req, res) => {
   const chatId = req.params.id;
   await muteChat(chatId);
   res.send(JSON.stringify({ message: "Silenciando o chat" }));
@@ -581,10 +582,10 @@ routes.patch("/group/mute-chat/:id", async (req, res) => {
 
 /**
  * @swagger
- * /group/unmute-chat/{id}:
+ * /chat/unmute-chat/{id}:
  *   patch:
  *     summary: Descilencia o chat
- *     tags: [Group]
+ *     tags: [Chat]
  *     parameters:
  *       - in: path
  *         name: id
@@ -596,7 +597,7 @@ routes.patch("/group/mute-chat/:id", async (req, res) => {
  *       200:
  *         description: Retorna o status da ação
  */
-routes.patch("/group/unmute-chat/:id", async (req, res) => {
+routes.patch("/chat/unmute-chat/:id", async (req, res) => {
   const chatId = req.params.id;
   await unmuteChat(chatId);
   res.send(JSON.stringify({ message: "Descilenciando o chat" }));
@@ -604,10 +605,10 @@ routes.patch("/group/unmute-chat/:id", async (req, res) => {
 
 /**
  * @swagger
- * /group/revoke-invite-chat/{id}:
+ * /chat/revoke-invite-chat/{id}:
  *   put:
  *     summary: Redefini o link de entrada do chat
- *     tags: [Group]
+ *     tags: [Chat]
  *     parameters:
  *       - in: path
  *         name: id
@@ -619,17 +620,17 @@ routes.patch("/group/unmute-chat/:id", async (req, res) => {
  *       200:
  *         description: Retorna o status da ação
  */
-routes.put("/group/revoke-invite-chat/:id", async (req, res) => {
+routes.put("/chat/revoke-invite-chat/:id", async (req, res) => {
   const chatId = req.params.id;
   await revokeInvite(chatId, res);
 });
 
 /**
  * @swagger
- * /group/get-invite-code/{id}:
+ * /chat/get-invite-code/{id}:
  *   get:
  *     summary: Obtém o link de entrada do chat
- *     tags: [Group]
+ *     tags: [Chat]
  *     parameters:
  *       - in: path
  *         name: id
@@ -641,8 +642,42 @@ routes.put("/group/revoke-invite-chat/:id", async (req, res) => {
  *       200:
  *         description: Retorna o status da ação
  */
-routes.get("/group/get-invite-code/:id", async (req, res) => {
+routes.get("/chat/get-invite-code/:id", async (req, res) => {
   const chatId = req.params.id;
   await getInviteCode(chatId, res);
 });
+
+/**
+ * @swagger
+ * /message/delete-last-message/{chatId}/{everyone}:
+ *   delete:
+ *     summary: Apaga o chat
+ *     tags: [Message]
+ *     parameters:
+ *       - in: path
+ *         name: chatId
+ *         required: true
+ *         description: ID do grupo
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: everyone
+ *         required: true
+ *         description: Apagar para todos
+ *         schema:
+ *           type: boolean
+ *     responses:
+ *       200:
+ *         description: Retorna o status da ação
+ */
+routes.delete(
+  "/message/delete-last-message/:chatId/:everyone",
+  async (req, res) => {
+    const chatId = req.params.chatId;
+    const everyone = req.params.everyone;
+    await deleteLastMessage(chatId, everyone);
+    res.send(JSON.stringify({ message: "Apagando a ultima mensagem do chat" }));
+  }
+);
+
 module.exports = { routes };
