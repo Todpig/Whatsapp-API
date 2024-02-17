@@ -27,6 +27,9 @@ const {
   setPictureChat,
   getInviteCode,
   deleteLastMessage,
+  closeCLient,
+  getAllChats,
+  acceptCodeInvite,
 } = require("../utils/functions.js");
 
 /**
@@ -38,7 +41,7 @@ const {
 
 /**
  * @swagger
- * /connect-session:
+ * /client/connect-session:
  *   get:
  *     summary: Inicia uma sessão de WhatsApp
  *     tags: [Client]
@@ -46,7 +49,7 @@ const {
  *       200:
  *         description: Retorna uma mensagem informando sobre o status da conexão e o qr code para realizar a conexão
  */
-routes.get("/connect-session", async (req, res) => {
+routes.get("/client/connect-session", async (req, res) => {
   try {
     let limit = LIMIT_TIMEOUT;
     const status = await startSession();
@@ -244,7 +247,7 @@ routes.get("/message/get-count-messages/:id/:limit", async (req, res) => {
 
 /**
  * @swagger
- * /close-and-delete-session/{deleteS}:
+ * /client/close-and-delete-session/{deleteS}:
  *   delete:
  *     summary: Fecha e deleta a sessão do cliente whastapp conectado
  *     tags: [Client]
@@ -256,7 +259,7 @@ routes.get("/message/get-count-messages/:id/:limit", async (req, res) => {
  *         schema:
  *           type: boolean
  */
-routes.delete("/close-and-delete-session/:deleteS", async (req, res) => {
+routes.delete("/client/close-and-delete-session/:deleteS", async (req, res) => {
   /**@type {boolean} */
   const deleteS = req.params.deleteS;
   const status = closeAndDeleteSession(deleteS);
@@ -318,7 +321,6 @@ routes.post("/chat/add-participants", async (req, res) => {
  *       200:
  *         description: Retorna uma mensagem informando sobre o status da ação
  */
-
 routes.post("/chat/remove-participants", async (req, res) => {
   const { chatId, participants } = req.body;
   await removeParticipants(chatId, participants);
@@ -679,5 +681,87 @@ routes.delete(
     res.send(JSON.stringify({ message: "Apagando a ultima mensagem do chat" }));
   }
 );
+
+/**
+ * @swagger
+ * /client/close-client:
+ *  patch:
+ *    summary: Fecha o cliente
+ *    tags: [Client]
+ *    responses:
+ *      200:
+ *        description: Retorna o status da ação
+ */
+routes.patch("/client/close-client", async (req, res) => {
+  const status = closeCLient();
+  if (!status)
+    return res.send(JSON.stringify({ message: "Cliente não encontrado" }));
+  res.status(200);
+  res.send(JSON.stringify({ message: "Fechando o cliente" }));
+});
+/**
+ * @swagger
+ * /client/logout-client:
+ *  patch:
+ *    summary: encerra a sessão do cliente
+ *    tags: [Client]
+ *    responses:
+ *      200:
+ *        description: Retorna o status da ação
+ */
+routes.patch("/client/logout-client", async (req, res) => {
+  const status = logoutClient();
+  if (!status)
+    return res.send(JSON.stringify({ message: "Cliente não encontrado" }));
+  res.status(200);
+  res.send(JSON.stringify({ message: "Encerrando o cliente" }));
+});
+
+/**
+ * @swagger
+ * /client/get-all-chats:
+ *  get:
+ *    summary: Obtém todos os chats
+ *    tags: [Client]
+ *    responses:
+ *      200:
+ *        description: Retorna uma lista de contendo todos os chats do cliente
+ */
+routes.get("/client/get-all-chats", async (req, res) => {
+  const allChats = getAllChats();
+  if (!allChats)
+    return res.send(
+      JSON.stringify({
+        message: "Cliente não encontrado ou nao consegui pegar os grupos",
+      })
+    );
+  res.status(200);
+  res.send(JSON.stringify({ allChats }));
+});
+
+/**
+ * @swagger
+ * /client/accept-invite-code:
+ *   post:
+ *     summary: Aceita o convite enviado
+ *     tags: [Client]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               inviteCode:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Retorna uma mensagem informando sobre o status da ação
+ */
+routes.post("/client/accept-invite-code", async (req, res) => {
+  const { inviteCode } = req.body;
+  await acceptCodeInvite(inviteCode);
+  res.send(JSON.stringify({ message: "Aceitando o convite enviado" }));
+});
 
 module.exports = { routes };

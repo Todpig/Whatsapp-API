@@ -256,6 +256,30 @@ async function deleteLastMessage(chatId, everyone) {
   return message ? await message.delete(everyone) : false;
 }
 
+function closeCLient() {
+  if (!sessions[SESSION_NAME]) return false;
+  sessions[SESSION_NAME].destroy();
+  return true;
+}
+function logoutClient() {
+  if (!sessions[SESSION_NAME]) return false;
+  sessions[SESSION_NAME].logout();
+  return true;
+}
+
+function getAllChats() {
+  if (!sessions[SESSION_NAME] || !userGroups) return false;
+  return userGroups;
+}
+
+/**
+ * @param {string} inviteCode
+ */
+async function acceptCodeInvite(inviteCode) {
+  const pattern = /https:\/\/chat\.whatsapp\.com\//g;
+  if (pattern.test(inviteCode)) inviteCode = inviteCode.replace(pattern, "");
+  await sessions[SESSION_NAME].acceptInvite(inviteCode);
+}
 module.exports = {
   getLastMessageByChatId,
   getParticipantsByChatId,
@@ -283,4 +307,8 @@ module.exports = {
   setPictureChat,
   getInviteCode,
   deleteLastMessage,
+  closeCLient,
+  logoutClient,
+  getAllChats,
+  acceptCodeInvite,
 };

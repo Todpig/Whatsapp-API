@@ -18,7 +18,8 @@ const options = {
     info: {
       title: "Whatsapp API",
       version: "1.0.0",
-      description: "APIs direcionadas para o whatsapp ultilizando a biblioteca whatsapp-web.js",
+      description:
+        'APIs direcionadas para o whatsapp ultilizando a biblioteca <a href="https://docs.wwebjs.dev/">whatsapp-web.js</a>',
     },
   },
   apis: ["./src/API/api.js"],
